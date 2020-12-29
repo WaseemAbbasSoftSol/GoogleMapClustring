@@ -1,31 +1,20 @@
 package com.example.mapclustring.ui
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
 import com.example.mapclustring.R
 import com.example.mapclustring.model.Dealer
-import com.example.mapclustring.utils.MultiDrawable
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
 import com.google.maps.android.ui.IconGenerator
-import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.*
 
 
 class DealerRender(
@@ -71,34 +60,37 @@ class DealerRender(
     }
 
     override fun onBeforeClusterRendered(cluster: Cluster<Dealer>, markerOptions: MarkerOptions) {
-        val profilePhotos: MutableList<Drawable> = ArrayList(4.coerceAtMost(cluster.size))
-        val width: Int = mImageDimension
-        val height: Int = mImageDimension
-        var dummyBitmap: Bitmap? = null
-        var drawable: Drawable
+        Glide.with(context)
+            .asBitmap()
+            .load(cluster.items.elementAt(0).profilePhoto)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .fitCenter()
+            .placeholder(R.mipmap.ic_launcher).dontAnimate().into(mClusterImageView)
 
-        for (dealer in cluster.items){
-            if (profilePhotos.size == 4) break
-            GlobalScope.launch {
-                try {
-                    dummyBitmap = Glide.with(context).asBitmap().load(dealer.profilePhoto)
-                        .submit(70,70).get()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-
-            drawable = BitmapDrawable(context.resources, dummyBitmap)
-            drawable.setBounds(0, 0, width, height)
-            profilePhotos.add(drawable)
-        }
-        val multiDrawable = MultiDrawable(profilePhotos)
-        multiDrawable.setBounds(0, 0, width, height)
-        mClusterImageView.setImageDrawable(multiDrawable)
+//        val profilePhotos: MutableList<Drawable> = ArrayList(4.coerceAtMost(cluster.size))
+//        val width: Int = mImageDimension
+//        val height: Int = mImageDimension
+//        var dummyBitmap: Bitmap? = null
+//        var drawable: Drawable
+//
+//        for (dealer in cluster.items){
+//            if (profilePhotos.size == 4) break
+//            try {
+//                dummyBitmap = Glide.with(context).asBitmap().load(dealer.profilePhoto)
+//                    .submit(70,70).get()
+//            } catch (e: Exception) {
+//                Log.d("log_d_m", e.message.toString())
+//            }
+//            drawable = BitmapDrawable(context.resources, dummyBitmap)
+//            drawable.setBounds(0, 0, width, height)
+//            profilePhotos.add(drawable)
+//        }
+//        val multiDrawable = MultiDrawable(profilePhotos)
+//        multiDrawable.setBounds(0, 0, width, height)
+//        mClusterImageView.setImageDrawable(multiDrawable)
         val icon = mClusterIconGenerator.makeIcon(cluster.size.toString())
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon))
     }
 
     override fun shouldRenderAsCluster(cluster: Cluster<Dealer>): Boolean = cluster.size > 1
-
 }
